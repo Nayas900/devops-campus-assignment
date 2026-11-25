@@ -216,3 +216,31 @@ docker logs flask-devops-container
 ```
 
 Finally, the Flask application was successfully tested, and both `/` and `/health` endpoints returned HTTP 200 responses.
+
+## Screenshots
+
+The following screenshots provide evidence of the successful Docker deployment, Flask API testing, and GitHub Actions CI execution.
+
+### 1. Docker Image Build
+
+Shows the successful creation of the Flask Docker image.
+
+![Docker Image Build](../screenshots/assignment-2/docker-build.png)
+
+### 2. Running Docker Container
+
+Shows the Flask application running inside a Docker container with the required port mapping.
+
+![Running Docker Container](../screenshots/assignment-2/docker-container-running.png)
+
+### 3. Flask API Testing
+
+Shows successful responses from both the home endpoint (`/`) and health endpoint (`/health`).
+
+![Flask API Testing](../screenshots/assignment-2/flask-endpoints.png)
+
+### 4. GitHub Actions CI Success
+
+Shows the successful execution of the automated Docker build workflow on GitHub Actions.
+
+![GitHub Actions CI Success](../screenshots/assignment-2/github-actions-success.png)

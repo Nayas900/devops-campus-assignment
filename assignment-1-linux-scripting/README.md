@@ -155,3 +155,25 @@ The project will demonstrate practical understanding of:
 - Log parsing and text processing.
 - File permissions and cron scheduling.
 - Git and GitHub version control.
+
+##  Screenshots
+
+The following screenshots demonstrate the successful execution of the Linux shell scripts.
+
+### 1. System Information Report
+
+This screenshot shows the system monitoring script displaying hostname, date and time, logged-in user, disk usage, memory usage, and top 5 processes.
+
+![System Information Report](../screenshots/assignment-1/sysinfo-output.png)
+
+### 2. Web Server Log Analysis
+
+This screenshot demonstrates log analysis, including total requests, HTTP 404 errors, and the top 3 IP addresses.
+
+![Log Analysis Report](../screenshots/assignment-1/log-report-output.png)
+
+### 3. Error Handling
+
+This screenshot demonstrates the script's handling of missing command-line arguments and non-existent log files.
+
+![Error Handling](../screenshots/assignment-1/log-report-error-handling.png)

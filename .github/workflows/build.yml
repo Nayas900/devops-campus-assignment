@@ -1,0 +1,26 @@
+
+name: Flask Docker CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docker-build:
+    name: Build Flask Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./assignment-2-docker-ci
+          file: ./assignment-2-docker-ci/Dockerfile
+          push: false
+          tags: flask-devops-app:ci

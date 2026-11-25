@@ -162,6 +162,57 @@ The workflow will verify that the Docker image can be built successfully.
 
 ## 12. Conclusion
 
-Successfully containerized and executed a Python Flask application using Docker. Verified the application endpoints through HTTP requests and confirmed that the container runs correctly with the required port mapping.
+Successfully containerized and executed a Python Flask application using Docker. Built the Docker image, ran the container, and verified both application endpoints through HTTP requests.
 
-The next step is to configure and test automated Docker image builds using GitHub Actions.
+Configured GitHub Actions to automatically build the Docker image whenever code is pushed or a pull request is created.
+
+The Docker deployment and automated CI pipeline were tested successfully.
+
+## 13. Debugging and Troubleshooting
+
+The teammate's Flask application code provided in the assignment was inspected.
+
+The following configurations were verified:
+
+| Component | Verification |
+|---|---|
+| Flask initialization | `Flask(__name__)` is correct |
+| Route definitions | `/` and `/health` are correctly defined |
+| Application startup | Main execution condition is correct |
+| Network binding | `0.0.0.0` allows external container access |
+| Application port | Flask listens on port `5000` |
+| Dependencies | Flask is specified in `requirements.txt` |
+
+No apparent source-code defects were found in the supplied snippet.
+
+The following deployment-related issues were also considered:
+
+**1. Incorrect network binding**
+
+- Problem: Using `127.0.0.1` inside a Docker container can prevent external access.
+- Fix: Bind the Flask application to `0.0.0.0`.
+
+```python
+app.run(host="0.0.0.0", port=5000)
+```
+
+**2. Missing Docker port mapping**
+
+- Problem: Without publishing the container port, the application may not be accessible through the host machine.
+- Fix: Start the container with the required port mapping.
+
+```bash
+docker run -d -p 5000:5000 flask-devops-app:1.0
+```
+
+**3. Container startup failure**
+
+- Problem: If the container exits, the application becomes unavailable.
+- Fix: Check container status and application logs.
+
+```bash
+docker ps -a
+docker logs flask-devops-container
+```
+
+Finally, the Flask application was successfully tested, and both `/` and `/health` endpoints returned HTTP 200 responses.

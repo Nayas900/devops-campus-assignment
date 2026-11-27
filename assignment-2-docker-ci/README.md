@@ -208,14 +208,41 @@ The workflow is triggered automatically on:
 
 ### CI Workflow Operations
 
+The workflow performs the following operations:
+
 1. Checks out the repository code.
 2. Sets up Docker Buildx.
 3. Builds the Flask Docker image using the Assignment 2 Dockerfile.
-4. Verifies that the Docker image can be built successfully.
+4. Loads the built Docker image into the GitHub Actions runner.
+5. Starts a Docker container using the newly built image.
+6. Tests the Flask application's `/health` endpoint using `curl`.
+7. Retries the health check if the application needs additional time to start.
+8. Verifies that the endpoint returns the expected response: `{"status":"ok"}`.
+9. Stops and removes the test container, even if the health check fails.
 
-The workflow builds the image locally within the GitHub Actions runner. Pushing the image to an external Docker registry is not required.
+### Automated Health Check
 
-The workflow execution was verified successfully through the GitHub Actions tab.
+The workflow tests the application using:
+
+```bash
+curl --fail --silent http://localhost:5000/health
+```
+
+Expected response:
+
+```json
+{"status":"ok"}
+```
+
+If the application starts successfully and returns the expected response, the health check passes.
+
+If the application fails to start, the endpoint is unavailable, or the response is unexpected, the GitHub Actions workflow fails and displays the container logs for troubleshooting.
+
+### CI Execution
+
+The workflow builds and tests the Docker image locally within the GitHub Actions runner. Pushing the image to an external Docker registry is not required.
+
+The complete CI pipeline was executed and verified successfully through the GitHub Actions tab.
 
 ## 12. Conclusion
 
@@ -223,7 +250,11 @@ Successfully containerized and executed a Python Flask application using Docker.
 
 Built the Docker image, ran the container, and verified both application endpoints through HTTP requests.
 
+Identified and fixed the errors in the provided Dockerfile and Docker run command.
+
 Configured GitHub Actions to automatically build the Docker image whenever code is pushed or a pull request is created.
+
+Enhanced the CI pipeline with an automated container health check that starts the application, tests the `/health` endpoint, validates the response, and cleans up the container.
 
 Also implemented a `.dockerignore` file to exclude unnecessary files from the Docker build context.
 

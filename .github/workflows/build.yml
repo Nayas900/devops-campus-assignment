@@ -7,7 +7,7 @@ on:
 
 jobs:
   docker-build:
-    name: Build Flask Docker Image
+    name: Build and Test Flask Docker Image
     runs-on: ubuntu-latest
 
     steps:
@@ -23,4 +23,41 @@ jobs:
           context: ./assignment-2-docker-ci
           file: ./assignment-2-docker-ci/Dockerfile
           push: false
+          load: true
           tags: flask-devops-app:ci
+
+      - name: Run Flask container and test health endpoint
+        run: |
+          docker run -d \
+            --name flask-devops-container \
+            -p 5000:5000 \
+            flask-devops-app:ci
+
+          echo "Waiting for Flask application to start..."
+
+          for i in {1..15}; do
+            if response=$(curl --fail --silent http://localhost:5000/health); then
+              echo "Health check successful!"
+              echo "Response: $response"
+
+              if echo "$response" | grep -q '"status":"ok"'; then
+                echo "Flask application is healthy."
+                exit 0
+              else
+                echo "Unexpected health response."
+                docker logs flask-devops-container
+                exit 1
+              fi
+            fi
+
+            echo "Waiting for application... attempt $i"
+            sleep 2
+          done
+
+          echo "Health check failed."
+          docker logs flask-devops-container
+          exit 1
+
+      - name: Clean up container
+        if: always()
+        run: docker rm -f flask-devops-container || true

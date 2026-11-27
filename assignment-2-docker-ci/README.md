@@ -1,8 +1,11 @@
+
 # Assignment 2: Dockerizing a Flask Application with CI
 
 ## 1. Objective
 
 The objective of this assignment is to containerize a simple Python Flask application using Docker and configure a GitHub Actions workflow to automatically build the Docker image whenever code is pushed to the repository.
+
+The assignment also involves identifying and fixing errors in a Dockerfile and Docker run command provided by a teammate.
 
 ## 2. Technologies Used
 
@@ -12,6 +15,7 @@ The objective of this assignment is to containerize a simple Python Flask applic
 - Dockerfile
 - Git and GitHub
 - GitHub Actions
+- GitHub Actions CI/CD
 
 ## 3. Project Structure
 
@@ -29,7 +33,7 @@ assignment-2-docker-ci/
 
 The application contains two endpoints:
 
-### Home endpoint
+### Home Endpoint
 
 ```python
 @app.route("/")
@@ -37,7 +41,7 @@ def home():
     return "Hello from DevOps!"
 ```
 
-### Health-check endpoint
+### Health-check Endpoint
 
 ```python
 @app.route("/health")
@@ -45,7 +49,7 @@ def health():
     return {"status": "ok"}
 ```
 
-The application runs on port `5000` and binds to `0.0.0.0` so that it can receive requests from outside the container.
+The application runs on port `5000` and binds to `0.0.0.0` so that it can receive requests from outside the Docker container.
 
 ## 5. Docker Configuration
 
@@ -53,11 +57,45 @@ The Dockerfile performs the following operations:
 
 1. Uses the lightweight Python 3.12 slim base image.
 2. Sets `/app` as the working directory.
-3. Copies `requirements.txt` into the container.
+3. Copies the requirements file into the container.
 4. Installs Flask and its dependencies.
-5. Copies the application source code.
+5. Copies the application source code into the container.
 6. Exposes port `5000`.
 7. Starts the Flask application.
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY app/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app/ .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+```
+
+### .dockerignore
+
+The `.dockerignore` file excludes unnecessary files from the Docker build context.
+
+```text
+.git
+.gitignore
+__pycache__
+*.pyc
+.venv
+venv
+.env
+```
+
+This helps keep the Docker build context clean and avoids copying unnecessary files into the image.
 
 ## 6. Build the Docker Image
 
@@ -87,7 +125,8 @@ Start the container in detached mode:
 docker run -d --name flask-devops-container -p 5000:5000 flask-devops-app:1.0
 ```
 
-Here:
+Explanation:
+
 - `-d` runs the container in the background.
 - `--name` assigns a name to the container.
 - `-p 5000:5000` maps host port 5000 to container port 5000.
@@ -100,7 +139,7 @@ docker ps
 
 ## 8. Test the Application
 
-### Test the home endpoint
+### Test the Home Endpoint
 
 Command:
 
@@ -114,7 +153,7 @@ Expected output:
 Hello from DevOps!
 ```
 
-### Test the health endpoint
+### Test the Health Endpoint
 
 Command:
 
@@ -156,68 +195,198 @@ docker rm flask-devops-container
 
 ## 11. GitHub Actions CI
 
-A GitHub Actions workflow will be configured in `.github/workflows/build.yml` to automatically build the Docker image whenever changes are pushed to the repository.
+A GitHub Actions workflow is configured in:
 
-The workflow will verify that the Docker image can be built successfully.
+```text
+.github/workflows/build.yml
+```
+
+The workflow is triggered automatically on:
+
+- Every push to the repository.
+- Pull requests.
+
+### CI Workflow Operations
+
+1. Checks out the repository code.
+2. Sets up Docker Buildx.
+3. Builds the Flask Docker image using the Assignment 2 Dockerfile.
+4. Verifies that the Docker image can be built successfully.
+
+The workflow builds the image locally within the GitHub Actions runner. Pushing the image to an external Docker registry is not required.
+
+The workflow execution was verified successfully through the GitHub Actions tab.
 
 ## 12. Conclusion
 
-Successfully containerized and executed a Python Flask application using Docker. Built the Docker image, ran the container, and verified both application endpoints through HTTP requests.
+Successfully containerized and executed a Python Flask application using Docker.
+
+Built the Docker image, ran the container, and verified both application endpoints through HTTP requests.
 
 Configured GitHub Actions to automatically build the Docker image whenever code is pushed or a pull request is created.
+
+Also implemented a `.dockerignore` file to exclude unnecessary files from the Docker build context.
 
 The Docker deployment and automated CI pipeline were tested successfully.
 
 ## 13. Debugging and Troubleshooting
 
-The teammate's Flask application code provided in the assignment was inspected.
+The recruitment team provided a Dockerfile and Docker run command containing errors that could prevent the Flask application from building or being accessed.
 
-The following configurations were verified:
+I analyzed the provided configuration, identified the problems, and documented their fixes below.
 
-| Component | Verification |
-|---|---|
-| Flask initialization | `Flask(__name__)` is correct |
-| Route definitions | `/` and `/health` are correctly defined |
-| Application startup | Main execution condition is correct |
-| Network binding | `0.0.0.0` allows external container access |
-| Application port | Flask listens on port `5000` |
-| Dependencies | Flask is specified in `requirements.txt` |
+### 13.1 Incorrect Base Image Instruction
 
-No apparent source-code defects were found in the supplied snippet.
+**Problem:**
 
-The following deployment-related issues were also considered:
-
-**1. Incorrect network binding**
-
-- Problem: Using `127.0.0.1` inside a Docker container can prevent external access.
-- Fix: Bind the Flask application to `0.0.0.0`.
-
-```python
-app.run(host="0.0.0.0", port=5000)
+```dockerfile
+FORM python:3.12-slim
 ```
 
-**2. Missing Docker port mapping**
+**Fix:**
 
-- Problem: Without publishing the container port, the application may not be accessible through the host machine.
-- Fix: Start the container with the required port mapping.
+```dockerfile
+FROM python:3.12-slim
+```
+
+**Explanation:**
+
+`FROM` is the valid Dockerfile instruction used to specify the base image.
+
+`FORM` is an invalid Dockerfile instruction and causes the Docker image build to fail.
+
+### 13.2 Incorrect Requirements Filename
+
+**Problem:**
+
+```dockerfile
+RUN pip install -r requirement.txt
+```
+
+**Fix:**
+
+```dockerfile
+RUN pip install -r requirements.txt
+```
+
+**Explanation:**
+
+The provided dependency file is named `requirements.txt`, not `requirement.txt`.
+
+Using the incorrect filename causes a file-not-found error during the Docker build.
+
+### 13.3 Incorrect Docker Port Mapping
+
+**Problem:**
 
 ```bash
-docker run -d -p 5000:5000 flask-devops-app:1.0
+docker run -p 5000:8080 myapp
 ```
 
-**3. Container startup failure**
-
-- Problem: If the container exits, the application becomes unavailable.
-- Fix: Check container status and application logs.
+**Fix:**
 
 ```bash
-docker ps -a
-docker logs flask-devops-container
+docker run -p 5000:5000 myapp
 ```
 
-Finally, the Flask application was successfully tested, and both `/` and `/health` endpoints returned HTTP 200 responses.
+**Explanation:**
 
-## Screenshots
+The Flask application listens on port `5000` inside the container.
+
+Docker port mapping follows this format:
+
+```text
+HOST_PORT:CONTAINER_PORT
+```
+
+The incorrect command maps host port `5000` to container port `8080`, where the Flask application is not listening.
+
+The correct mapping is `5000:5000`.
+
+### 13.4 Incorrect Application File Copying
+
+**Problem:**
+
+```dockerfile
+COPY . .
+CMD ["python", "app.py"]
+```
+
+**Explanation:**
+
+In this project, the Docker build context is the Assignment 2 root directory, and the Flask source code is stored inside the `app/` directory.
+
+Using `COPY . .` copies the `app/` directory into the container's working directory.
+
+As a result, `app.py` is located at `/app/app/app.py`, while the startup command expects it at `/app/app.py`.
+
+This can cause the container to fail during startup.
+
+**Fix:**
+
+```dockerfile
+COPY app/ .
+```
+
+This copies the contents of the application directory directly into the container's working directory.
+
+### 13.5 Final Corrected Dockerfile
+
+After fixing the identified issues, the final Dockerfile used in this project is:
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY app/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app/ .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+```
+
+The application is started using:
+
+```bash
+docker run -d --name flask-devops-container -p 5000:5000 flask-devops-app:1.0
+```
+
+### 13.6 Verification After Fixing the Issues
+
+After correcting the Docker configuration, I successfully built the Docker image, started the container, and tested both Flask endpoints.
+
+**Home endpoint:**
+
+```bash
+curl http://localhost:5000/
+```
+
+Output:
+
+```text
+Hello from DevOps!
+```
+
+**Health endpoint:**
+
+```bash
+curl http://localhost:5000/health
+```
+
+Output:
+
+```json
+{"status":"ok"}
+```
+
+Both endpoints returned successful HTTP responses, confirming that the Flask application was accessible through the Docker container.
+
+## 14. Screenshots
 
 The following screenshots provide evidence of the successful Docker deployment, Flask API testing, and GitHub Actions CI execution.
 
